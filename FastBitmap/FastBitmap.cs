@@ -1,4 +1,4 @@
-﻿/*
+/*
     FastBitmapLib
 
     The MIT License (MIT)
@@ -55,7 +55,7 @@ namespace FastBitmapLib
         /// The first pixel of the bitmap
         /// </summary>
         private int* _scan0;
-        
+
         /// <summary>
         /// Gets the width of this FastBitmap object
         /// </summary>
@@ -70,7 +70,7 @@ namespace FastBitmapLib
         /// Gets the pointer to the first pixel of the bitmap
         /// </summary>
         public IntPtr Scan0 => _bitmapData.Scan0;
-        
+
         /// <summary>
         /// Gets the stride width of the bitmap
         /// </summary>
@@ -189,7 +189,7 @@ namespace FastBitmapLib
         {
             // Lock the bitmap's bits
             _bitmapData = _bitmap.LockBits(rect, lockMode, _bitmap.PixelFormat);
-            
+
             _scan0 = (int*)_bitmapData.Scan0;
             Stride = _bitmapData.Stride / BytesPerPixel;
 
@@ -215,7 +215,7 @@ namespace FastBitmapLib
 
             Locked = false;
         }
-        
+
         /// <summary>
         /// Sets the pixel color at the given coordinates. If the bitmap was not locked beforehands,
         /// an exception is thrown
@@ -270,6 +270,34 @@ namespace FastBitmapLib
             }
 
             *(uint*)(_scan0 + x + y * Stride) = color;
+        }
+
+        /// <summary>
+        /// Sets the pixel color at the given coordinates. If the bitmap was not locked beforehands,
+        /// an exception is thrown
+        /// </summary>
+        /// <param name="x">The X coordinate of the pixel to set</param>
+        /// <param name="y">The Y coordinate of the pixel to set</param>
+        /// <param name="color">The new color of the pixel to set</param>
+        /// <exception cref="InvalidOperationException">The fast bitmap is not locked</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The provided coordinates are out of bounds of the bitmap</exception>
+        public void SetPixel(int x, int y, PixelData color)
+        {
+            if (!Locked)
+            {
+                throw new InvalidOperationException("The FastBitmap must be locked before any pixel operations are made");
+            }
+
+            if (x < 0 || x >= Width)
+            {
+                throw new ArgumentOutOfRangeException(nameof(x), @"The X component must be >= 0 and < width");
+            }
+            if (y < 0 || y >= Height)
+            {
+                throw new ArgumentOutOfRangeException(nameof(y), @"The Y component must be >= 0 and < height");
+            }
+
+            *(PixelData*)(_scan0 + x + y * Stride) = color;
         }
 
         /// <summary>
@@ -337,6 +365,137 @@ namespace FastBitmapLib
             }
 
             return *((uint*)_scan0 + x + y * Stride);
+        }
+
+        /// <summary>
+        /// Gets the pixel color at the given coordinates as an PixelData struct.
+        /// If the bitmap was not locked beforehands, an exception is thrown
+        /// </summary>
+        /// <param name="x">The X coordinate of the pixel to get</param>
+        /// <param name="y">The Y coordinate of the pixel to get</param>
+        /// <exception cref="InvalidOperationException">The fast bitmap is not locked</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The provided coordinates are out of bounds of the bitmap</exception>
+        public PixelData GetPixelData(int x, int y)
+        {
+            if (!Locked)
+            {
+                throw new InvalidOperationException("The FastBitmap must be locked before any pixel operations are made");
+            }
+
+            if (x < 0 || x >= Width)
+            {
+                throw new ArgumentOutOfRangeException(nameof(x), @"The X component must be >= 0 and < width");
+            }
+            if (y < 0 || y >= Height)
+            {
+                throw new ArgumentOutOfRangeException(nameof(y), @"The Y component must be >= 0 and < height");
+            }
+
+            return *((PixelData*)_scan0 + x + y * Stride);
+        }
+
+        /// <summary>
+        /// Unsafely sets the pixel color at the given coordinates.
+        /// Realy fast sets pixel to memory unsafely without any checks.
+        /// Please, use with caution!
+        /// </summary>
+        /// <param name="x">The X coordinate of the pixel to get</param>
+        /// <param name="y">The Y coordinate of the pixel to get</param>
+        /// <exception cref="AccessViolationException">Bitmap is not locked or coordinates out of bounds of the bitmap</exception>
+        public void UnsafeSetPixel(int x, int y, Color color)
+        {
+            *(uint*)(_scan0 + x + y * Stride) = unchecked((uint)color.ToArgb());
+        }
+
+        /// <summary>
+        /// Unsafely sets the pixel color at the given coordinates.
+        /// Realy fast sets pixel to memory unsafely without any checks.
+        /// Please, use with caution!
+        /// </summary>
+        /// <param name="x">The X coordinate of the pixel to get</param>
+        /// <param name="y">The Y coordinate of the pixel to get</param>
+        /// <exception cref="AccessViolationException">Bitmap is not locked or coordinates out of bounds of the bitmap</exception>
+        public void UnsafeSetPixel(int x, int y, PixelData color)
+        {
+            *(PixelData*)(_scan0 + x + y * Stride) = color;
+        }
+
+        /// <summary>
+        /// Unsafely sets the pixel color at the given coordinates.
+        /// Realy fast sets pixel to memory unsafely without any checks.
+        /// Please, use with caution!
+        /// </summary>
+        /// <param name="x">The X coordinate of the pixel to get</param>
+        /// <param name="y">The Y coordinate of the pixel to get</param>
+        /// <exception cref="AccessViolationException">Bitmap is not locked or coordinates out of bounds of the bitmap</exception>
+        public void UnsafeSetPixel(int x, int y, int color)
+        {
+            *(uint*)(_scan0 + x + y * Stride) = unchecked((uint)color);
+        }
+
+        /// <summary>
+        /// Unsafely sets the pixel color at the given coordinates.
+        /// Realy fast sets pixel to memory unsafely without any checks.
+        /// Please, use with caution!
+        /// </summary>
+        /// <param name="x">The X coordinate of the pixel to get</param>
+        /// <param name="y">The Y coordinate of the pixel to get</param>
+        /// <exception cref="AccessViolationException">Bitmap is not locked or coordinates out of bounds of the bitmap</exception>
+        public void UnsafeSetPixel(int x, int y, uint color)
+        {
+            *(uint*)(_scan0 + x + y * Stride) = color;
+        }
+
+        /// <summary>
+        /// Unsafely gets the pixel color at the given coordinates as an standart Color.
+        /// Realy fast gets pixel from memory unsafely without any checks.
+        /// Please, use with caution!
+        /// </summary>
+        /// <param name="x">The X coordinate of the pixel to get</param>
+        /// <param name="y">The Y coordinate of the pixel to get</param>
+        /// <exception cref="AccessViolationException">Bitmap is not locked or coordinates out of bounds of the bitmap</exception>
+        public Color UnsafeGetPixelColor(int x, int y)
+        {
+            return Color.FromArgb(*(_scan0 + x + y * Stride));
+        }
+
+        /// <summary>
+        /// Unsafely gets the pixel color at the given coordinates as an PixelData struct.
+        /// Realy fast gets pixel from memory unsafely without any checks.
+        /// Please, use with caution!
+        /// </summary>
+        /// <param name="x">The X coordinate of the pixel to get</param>
+        /// <param name="y">The Y coordinate of the pixel to get</param>
+        /// <exception cref="AccessViolationException">Bitmap is not locked or coordinates out of bounds of the bitmap</exception>
+        public PixelData UnsafeGetPixelData(int x, int y)
+        {
+            return *((PixelData*)_scan0 + x + y * Stride);
+        }
+
+        /// <summary>
+        /// Unsafely gets the pixel color at the given coordinates as an unsigned integer value.
+        /// Realy fast gets pixel from memory unsafely without any checks.
+        /// Please, use with caution!
+        /// </summary>
+        /// <param name="x">The X coordinate of the pixel to get</param>
+        /// <param name="y">The Y coordinate of the pixel to get</param>
+        /// <exception cref="AccessViolationException">Bitmap is not locked or coordinates out of bounds of the bitmap</exception>
+        public uint UnsafeGetPixelUInt(int x, int y)
+        {
+            return *((uint*)_scan0 + x + y * Stride);
+        }
+
+        /// <summary>
+        /// Unsafely gets the pixel color at the given coordinates as an integer value.
+        /// Realy fast gets pixel from memory unsafely without any checks.
+        /// Please, use with caution!
+        /// </summary>
+        /// <param name="x">The X coordinate of the pixel to get</param>
+        /// <param name="y">The Y coordinate of the pixel to get</param>
+        /// <exception cref="AccessViolationException">Bitmap is not locked or coordinates out of bounds of the bitmap</exception>
+        public int UnsafeGetPixelInt(int x, int y)
+        {
+            return *(_scan0 + x + y * Stride);
         }
 
         /// <summary>
@@ -734,19 +893,19 @@ namespace FastBitmapLib
 
             return slicedBitmap;
         }
-        
+
         /// <summary>
         /// .NET wrapper to native call of 'memcpy'. Requires Microsoft Visual C++ Runtime installed
         /// </summary>
         [DllImport("msvcrt.dll", EntryPoint = "memcpy", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
         public static extern IntPtr memcpy(IntPtr dest, IntPtr src, ulong count);
-        
+
         /// <summary>
         /// .NET wrapper to native call of 'memcpy'. Requires Microsoft Visual C++ Runtime installed
         /// </summary>
         [DllImport("msvcrt.dll", EntryPoint = "memcpy", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
         public static extern IntPtr memcpy(void* dest, void* src, ulong count);
-        
+
         /// <summary>
         /// .NET wrapper to native call of 'memset'. Requires Microsoft Visual C++ Runtime installed
         /// </summary>
@@ -790,6 +949,19 @@ namespace FastBitmapLib
     }
 
     /// <summary>
+    /// Faster that standart Color class.
+    /// Because we don't init Color class and don't convert the int value to Color.
+    /// It's give really big increase of speed.
+    /// </summary>
+    public struct PixelData
+    {
+        public byte Blue;
+        public byte Green;
+        public byte Red;
+        public byte Alpha;
+    }
+
+    /// <summary>
     /// Static class that contains fast bitmap extension methdos for the Bitmap class
     /// </summary>
     public static class FastBitmapExtensions
@@ -816,6 +988,18 @@ namespace FastBitmapLib
         public static Bitmap DeepClone(this Bitmap bitmap)
         {
             return bitmap.Clone(new Rectangle(0, 0, bitmap.Width, bitmap.Height), bitmap.PixelFormat);
+        }
+
+        /// <summary>
+        /// Returns a reformated deep clone of this Bitmap object, with all the data copied over.
+        /// After a deep clone, the new bitmap is completely independent from the original
+        /// </summary>
+        /// <param name="bitmap">The bitmap to clone</param>
+        /// <param name="pixelFormat">The PixelFormat of result bitmap</param>
+        /// <returns>A deep clone of this Bitmap object, with all the data copied over</returns>
+        public static Bitmap DeepCloneAndReformat(this Bitmap bitmap, PixelFormat pixelFormat)
+        {
+            return bitmap.Clone(new Rectangle(0, 0, bitmap.Width, bitmap.Height), pixelFormat);
         }
     }
 }
